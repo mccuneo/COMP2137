@@ -37,9 +37,17 @@ processes=$(ps -e --no-headers | wc -l)
 
 loadavg=$(uptime | awk -F'load average:' '{print $2}' | xargs)
 
-ports=$(ss -tuln | awk 'NR>1 {split($5,a,":"); print a[length(a)]}' | sort -n | uniq | paste -sd ", " -)
+# Get all listening ports (TCP/UDP), remove duplicates, and join with commas
+ports=$(ss -tuln | awk 'NR>1 {split($5, a, ":"); print a[length(a)]}' | sort -n | uniq | paste -sd,)
 
-ufw_status=$(ufw status | head -n 1)
+echo "Listening Network Ports: $ports"
+
+if command -v ufw >/dev/null 2>&1; then
+    ufw_status=$(sudo ufw status | head -n 1)
+    echo "UFW Status: $ufw_status"
+else
+    echo "UFW Status: UFW not installed"
+fi
 
 # Output the report
 echo ""
