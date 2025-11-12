@@ -77,3 +77,43 @@ systemctl start squid
 
 #User account configuration
 
+#Lists of users
+
+users=("dennis" "aubrey" "captain" "snibbles" "brownie" "scooter" "sandy" "perrier" "cindy" "tiger" "yoda")
+
+#Create user if not existent
+
+for user in "$users[@]}"; do
+sudo mkdir -p "/home/$user/.ssh"
+sudo useradd -m -s /bin/bash "$user"
+else
+	echo "User $user already exsists."
+fi
+#Create SSH keys
+for key_type in rsa ed25519; do
+	key_path"/home/$user/.ssh/id_$key_type"
+	if [ ! -f "$key_path" ]; then
+	echo "Generating SSH $key_type key for $user."
+	sudo -u "$user-keygen -t "key_type" -f "$key_path" -N "" > /dev/null
+	fi
+#Adding public key to authorized keys
+	cat "$key_path.pub" >> "/home/$user/.ssh/authorized_keys"
+done
+
+#Check correct permissions on the user's .ssh folder/ files
+chown -R "$user:$user" /home/"$user"/.ssh
+chmod 700 /home/"$user"/.ssh
+chmod 600 /home/"$user"/.ssh/*
+	echo"User $user has configured SSH keys."
+done
+
+#Add dennis to sudo group
+if if "dennis" &./dev/null && ! groups dennis | grep -q sudo; then
+	echo "dennis is adding to sudo group."
+	usermod -aG sudo dennis
+else
+		echo "dennis is already a member of the sudo group."
+
+#Script competetion remarks
+	echo "The script has sucessfully executed!"
+	exit 0
