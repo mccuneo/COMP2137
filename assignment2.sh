@@ -27,11 +27,53 @@ else
 fi
 {
 
-#Network Configuration
-echo "Configuring and checking network interface"
-#Check that netplan is properly configured for static IP
-interface_name=$(ip -o link show | grep -v 'lo' |awk -F': ' '{print $2])
+#Network Interface Configuration
+netplan_file="/etc/netplan/00-intaller-config.yaml"
+config_IP= "192.168.16.21/24"
+if [ -f "$netplan_file"]; then
+	if ! grep -q "$config_IP" "$netplan_file"; then
+	echo "Network configuration is updating..."
+	sed -i "s/addresses: \[.*\]/addresses: [$config_UP]/g" "$netplan_file"
+	netplan apply
+else
+	echo "The Network Configuration is already correct!"
+	fi
+else
+	echo "The Netplan Configuration file is not found. Network Configuration is being skipped."
+	fi
 
-#Modifying second interface
-netplan_file="/etc/netplan/01-$interface_name.yaml"
+#Update /etc/hosts
+host_entry="192.168.16.21 server1"
+if ! grep -q "^192.168.16.21" /etc/hosts; then
+	echo "/etc/hosts is updating..."
+	sed -i '/server1/d' /etc/hosts
+	echo "$host_entry" >> /etc/hosts
+else
+	echo "etc/hosts is already configured."
+fi
+
+#Apply netplan configuration
+netplan apply
+
+#Installation of required packages
+install_packages=("apache2" "squid")
+
+for package in "${install_packages[@]}"; do
+	dpkg -s "$package" > /dev/null 2>&1
+	if [$? -ne 0]; then
+		echo "Installing $package."
+		apt install -y "$package" > /dev/null 2>&1
+	else
+		echo "$package has already been installed."
+	fi
+done
+
+#Ensure that Apache and Squid are both up and running
+
+systemctl enable apache2
+systemctl start apache2
+systemctl enable squid
+systemctl start squid
+
+#User account configuration
 
